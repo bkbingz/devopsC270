@@ -1,0 +1,22 @@
+---
+- name: Deploy Note App via Docker
+  hosts: webserver
+  become: true
+  tasks:
+    - name: Stop and remove old container
+      docker_container:
+        name: note-app
+        state: absent
+
+    - name: Pull latest image from Docker Hub
+      docker_image:
+        name: ericj77/my-note-app:latest
+        source: pull
+
+    - name: Start new container
+      docker_container:
+        name: note-app
+        image: ericj77/my-note-app:latest
+        state: started
+        ports:
+          - "80:80"
