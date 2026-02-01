@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My To-Do List</title>
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            background-color: #f0f0f0; /* Light grey background like your image */
+        }
+
+        /* The white "barrier" container */
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 3rem; /* Massive H1 size */
+            margin-top: 0;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        #taskInput {
+            padding: 8px;
+            width: 60%;
+            border: 1px solid #ccc;
+        }
+
+        #taskList {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: #aaa;
+        }
+
+        /* Smaller Logout button OUTSIDE the container */
+        .logout-btn {
+            margin-top: 20px;
+            background-color: #d3d3d3;
+            color: #444;
+            border: none;
+            padding: 6px 15px; /* Smaller padding */
+            font-size: 0.85rem;  /* Smaller font */
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: 0.2s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0c0c0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>My Tasks</h1>
+        
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="What needs to be done?">
+            <button onclick="addTask()">Add</button>
+        </div>
+
+        <ul id="taskList"></ul>
+    </div>
+
+    <form id="auth-form" action="../login1.html">
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
+
+    <script>
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const list = document.getElementById('taskList');
+
+            if (input.value.trim() === "") return;
+
+            const li = document.createElement('li');
+            li.className = 'task-item';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            
+            const taskText = document.createElement('span');
+            taskText.textContent = input.value;
+
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    taskText.classList.add('completed');
+                    // Deletes after 0.8 seconds so you see the cross-off
+                    setTimeout(() => {
+                        li.style.opacity = '0';
+                        li.style.transition = '0.3s';
+                        setTimeout(() => li.remove(), 300);
+                    }, 800);
+                }
+            });
+
+            li.appendChild(checkbox);
+            li.appendChild(taskText);
+            list.appendChild(li);
+
+            input.value = "";
+        }
+    </script>
+</body>
+</html>
