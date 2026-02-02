@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks</title>
+    <style>
+        /* Matching your existing background and font */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5; /* Light gray-blue background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* The Card Container */
+        .auth-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #1a1a1a;
+            font-size: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't break width */
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        /* Action Button */
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #f8f9fa; /* Matching your "Add" button style */
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #e2e6ea;
+        }
+
+        /* Toggle Link */
+        .toggle-text {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .toggle-text span {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* Hide signup fields by default */
+        .signup-only {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-card">
+    <h2 id="form-title">Login</h2>
+    
+    <form id="auth-form">
+        <div class="input-group signup-only" id="name-group">
+            <input type="text" placeholder="Full Name">
+        </div>
+
+        <div class="input-group">
+            <input type="email" placeholder="Email Address" required>
+        </div>
+
+        <div class="input-group">
+            <input type="password" placeholder="Password" required>
+        </div>
+
+        <form action="v1/v1 index.html">
+            <button type="submit" class="btn" id="submit-btn">Login</button>
+        </form>
+    </form>
+
+    <div class="toggle-text">
+        <p id="toggle-message">Don't have an account? <span onclick="toggleForm()">Sign Up</span></p>
+    </div>
+</div>
+
+<script>
+    let isLogin = true;
+
+    function toggleForm() {
+        isLogin = !isLogin;
+        
+        const title = document.getElementById('form-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const toggleMsg = document.getElementById('toggle-message');
+        const nameGroup = document.getElementById('name-group');
+
+        if (isLogin) {
+            title.innerText = 'Login';
+            submitBtn.innerText = 'Login';
+            toggleMsg.innerHTML = "Don't have an account? <span onclick='toggleForm()'>Sign Up</span>";
+            nameGroup.style.display = 'none';
+        } else {
+            title.innerText = 'Create Account';
+            submitBtn.innerText = 'Sign Up';
+            toggleMsg.innerHTML = "Already have an account? <span onclick='toggleForm()'>Login</span>";
+            nameGroup.style.display = 'block';
+        }
+    }
+</script>
+<script>
+const authForm = document.getElementById('auth-form');
+
+authForm.addEventListener('submit', function(event) {
+    // 1. Prevent the page from refreshing
+    event.preventDefault();
+
+    // 2. This is where you would normally validate credentials with a server.
+    // For now, we'll assume the login is successful.
+    console.log("Form submitted! Redirecting...");
+
+    // 3. Redirect to your homepage file
+    // Replace 'index.html' with the actual name of your home page file
+    window.location.href = "homepage.html";
+});
+</script>
+</body>
+</html>
