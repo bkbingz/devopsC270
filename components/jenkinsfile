@@ -1,0 +1,99 @@
+/*
+ * PROJECT: DevOps Note Application CI/CD Pipeline
+ * DESCRIPTION: Automated pipeline for Building, Testing, and Deploying
+ * a Dockerized Note App to a remote EC2 instance via Ansible.
+ */
+
+pipeline {
+    agent any
+
+    environment {
+        // Docker Hub configuration
+        DOCKER_USER = 'ericj77'
+        IMAGE_NAME  = "my-note-app"
+    }
+
+    stages {
+        stage('Source Checkout') {
+            steps {
+                // Pulling source code from the main branch
+                git branch: 'main', url: 'https://github.com/bkbingz/devopsC270.git'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                // Change directory to 'components' where Dockerfile lives
+                dir('components') {
+                    echo "Starting Docker build process..."
+                    sh "docker build -t ${DOCKER_USER}/${IMAGE_NAME}:latest ."
+                }
+            }
+        }
+
+        stage('Unit Testing') {
+            steps {
+                script {
+                    echo "Running containerized tests..."
+                    // Start temporary test container on port 5500
+                    sh "docker run -d -p 5500:80 --name test-env ${DOCKER_USER}/${IMAGE_NAME}:latest"
+                    
+                    // Allow time for Nginx to initialize
+                    sleep 5
+                    
+                    // Verify application reachability via internal bridge gateway
+                    sh 'curl -f http://172.17.0.1:5500'
+                    echo "Automated Test Passed: Application responded successfully."
+                    
+                    // Cleanup local test environment
+                    sh 'docker stop test-env && docker rm test-env'
+                }
+            }
+        }
+
+        stage('Artifact Distribution') {
+            steps {
+                // Log in to Docker Hub using secure Jenkins credentials
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                    sh "echo \$PASS | docker login -u \$USER --password-stdin"
+                    echo "Pushing image to Docker Hub repository..."
+                    sh "docker push ${DOCKER_USER}/${IMAGE_NAME}:latest"
+                }
+            }
+        }
+
+        stage('Remote Deployment (Ansible)') {
+            steps {
+                // Injecting the partner server SSH private key securely into the environment
+                withCredentials([sshUserPrivateKey(credentialsId: 'ria_key', keyFileVariable: 'RIA_KEY')]) {
+                    dir('components') {
+                        echo "Initiating Ansible Playbook for remote deployment..."
+                        sh """
+                            cp \$RIA_KEY todokeyone.pem
+                            chmod 400 todokeyone.pem
+                            ansible-playbook -i inventory.ini deploy_app.yml
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Performing post-build cleanup operations..."
+            // Ensure no lingering test containers exist on the Jenkins server
+            sh 'docker stop test-env || true'
+            sh 'docker rm test-env || true'
+            
+            // Critical security: Remove the private key file after deployment
+            sh 'rm -f components/todokeyone.pem'
+        }
+        success {
+            echo "CI/CD Pipeline execution completed successfully."
+        }
+        failure {
+            echo "Pipeline failed. Please inspect console logs for stage-specific errors."
+        }
+    }
+}
