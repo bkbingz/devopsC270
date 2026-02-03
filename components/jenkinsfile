@@ -11,6 +11,10 @@ pipeline {
         // Docker Hub configuration
         DOCKER_USER = 'ericj77'
         IMAGE_NAME  = "my-note-app"
+        IMAGE_TAG   = "v${BUILD_NUMBER}"
+        
+        // Swarm configuration
+        THARUN_MANAGER_IP = '3.26.215.49' // <--- Tharun's Manager IP
     }
 
     stages {
@@ -26,6 +30,7 @@ pipeline {
                 // Change directory to 'components' where Dockerfile lives
                 dir('components') {
                     echo "Starting Docker build process..."
+                    sh "docker build ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
                     sh "docker build -t ${DOCKER_USER}/${IMAGE_NAME}:latest ."
                 }
             }
@@ -74,6 +79,18 @@ pipeline {
                             ansible-playbook -i inventory.ini deploy_app.yml
                         """
                     }
+                }
+            }
+        }
+        
+        stage('Production Deployment (Swarm)') {
+            steps {
+                // This tells Tharun's Manager to pull the fresh image and update the cluster
+                withCredentials([sshUserPrivateKey(credentialsId: 'ria_key', keyFileVariable: 'SWARM_KEY')]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i ${SWARM_KEY} ubuntu@${THARUN_MANAGER_IP} \
+                        "docker service update --image ${DOCKER_USER}/${IMAGE_NAME}:latest my-note-stack_web"
+                    """
                 }
             }
         }
