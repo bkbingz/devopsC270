@@ -30,7 +30,6 @@ pipeline {
                 // Change directory to 'components' where Dockerfile lives
                 dir('components') {
                     echo "Starting Docker build process..."
-                    sh "docker build ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
                     sh "docker build -t ${DOCKER_USER}/${IMAGE_NAME}:latest ."
                 }
             }
@@ -82,7 +81,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Production Deployment (Swarm)') {
             steps {
                 // This tells Tharun's Manager to pull the fresh image and update the cluster
