@@ -298,3 +298,132 @@ function logout() {
 
     window.location.href = "login.html";
 }
+
+/* ===============================
+   SIMPLE IN-CODE TEST SUITE
+   =============================== */
+
+function assert(condition, message) {
+    if (!condition) {
+        console.error("❌ FAIL:", message);
+        return false;
+    }
+    console.log("✅ PASS:", message);
+    return true;
+}
+
+function resetStorage() {
+    localStorage.clear();
+    sessionStorage.clear();
+    tasks = [];
+}
+
+/* ===============================
+   TC-TASK-02: Empty task blocked
+   =============================== */
+function test_empty_task_blocked() {
+    console.log("Running TC-TASK-02");
+
+    resetStorage();
+    setAuthData(1, "TestUser", true);
+    currentUser = { id: 1, name: "TestUser" };
+
+    document.getElementById("taskInput").value = "   ";
+    addTask();
+
+    return assert(tasks.length === 0, "Empty task should not be added");
+}
+
+/* ==================================
+   TC-PERSIST-01: Task persists refresh
+   ================================== */
+function test_task_persistence() {
+    console.log("Running TC-PERSIST-01");
+
+    resetStorage();
+    setAuthData(1, "PersistUser", true);
+    currentUser = { id: 1, name: "PersistUser" };
+
+    tasks = [];
+    tasks.push({
+        id: 123,
+        userId: 1,
+        text: "Persistent Task",
+        completed: false,
+        createdAt: new Date().toISOString()
+    });
+
+    saveTasks();
+    tasks = [];
+    loadTasks();
+
+    return assert(
+        tasks.some(t => t.text === "Persistent Task"),
+        "Task should persist after reload"
+    );
+}
+
+/* =====================================
+   TC-PERSIST-02: User task isolation
+   ===================================== */
+function test_user_isolation() {
+    console.log("Running TC-PERSIST-02");
+
+    resetStorage();
+
+    tasks = [
+        { id: 1, userId: 1, text: "User A Task", completed: false },
+        { id: 2, userId: 2, text: "User B Task", completed: false }
+    ];
+
+    saveTasks();
+    loadTasks();
+
+    currentUser = { id: 2, name: "UserB" };
+    const visibleTasks = tasks.filter(t => t.userId === currentUser.id);
+
+    return assert(
+        visibleTasks.length === 1 && visibleTasks[0].text === "User B Task",
+        "User should only see their own tasks"
+    );
+}
+
+/* ==================================
+   TC-SEARCH-01: Search filters tasks
+   ================================== */
+function test_search_filter() {
+    console.log("Running TC-SEARCH-01");
+
+    resetStorage();
+    setAuthData(1, "SearchUser", true);
+    currentUser = { id: 1, name: "SearchUser" };
+
+    tasks = [
+        { id: 1, userId: 1, text: "Buy milk", completed: false },
+        { id: 2, userId: 1, text: "Do homework", completed: false }
+    ];
+
+    document.getElementById("searchInput").value = "milk";
+    renderTasks();
+
+    const displayedTasks = document.querySelectorAll(".task-text");
+
+    return assert(
+        displayedTasks.length === 1 &&
+        displayedTasks[0].textContent.includes("milk"),
+        "Search should filter tasks correctly"
+    );
+}
+
+/* ===============================
+   Run all tests
+   =============================== */
+function runAllTests() {
+    console.log("===== RUNNING IN-CODE TESTS =====");
+    test_empty_task_blocked();
+    test_task_persistence();
+    test_user_isolation();
+    test_search_filter();
+    console.log("===== TESTING COMPLETE =====");
+}
+
