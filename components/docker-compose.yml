@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  web:
+    image: ericj77/my-note-app:latest  # Your specific image
+    ports:
+      - "80:80"
+    deploy:
+      replicas: 2                     # Spreads the app across your 2 EC2 nodes
+    networks:
+      - note-net
+    depends_on:
+      - db
+
+  db:
+    image: redis:alpine               # The shared database for your task list
+    deploy:
+      placement:
+        constraints: [node.role == manager] # Keeps the data on the manager node
+    networks:
+      - note-net
+
+networks:
+  note-net:
+    driver: overlay                   # The "virtual tunnel" connecting Node A and B

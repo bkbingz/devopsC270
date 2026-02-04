@@ -8,15 +8,18 @@
         name: note-app
         state: absent
 
-    - name: Pull latest image from Docker Hub
+    - name: Force pull latest image from Docker Hub
       docker_image:
         name: ericj77/my-note-app:latest
         source: pull
+        force_source: yes  # <--- CRITICAL: Forces Ansible to check Hub for a new version
 
     - name: Start new container
       docker_container:
         name: note-app
         image: ericj77/my-note-app:latest
         state: started
-        ports:
+        pull: true         # <--- Extra safety: Ensures the container uses the fresh pull
+        published_ports:
           - "80:80"
+        restart_policy: always
