@@ -12,9 +12,6 @@ pipeline {
         DOCKER_USER = 'ericj77'
         IMAGE_NAME  = "my-note-app"
         IMAGE_TAG   = "v${BUILD_NUMBER}"
-        
-        // Swarm configuration
-        THARUN_MANAGER_IP = '3.26.215.49' // <--- Tharun's Manager IP
     }
 
     stages {
@@ -30,6 +27,7 @@ pipeline {
                 // Change directory to 'components' where Dockerfile lives
                 dir('components') {
                     echo "Starting Docker build process..."
+                    // Building with the 'latest' tag for deployment consistency
                     sh "docker build -t ${DOCKER_USER}/${IMAGE_NAME}:latest ."
                 }
             }
@@ -46,6 +44,7 @@ pipeline {
                     sleep 5
                     
                     // Verify application reachability via internal bridge gateway
+                    // Using the bridge IP (172.17.0.1) to allow Jenkins to reach the host port
                     sh 'curl -f http://172.17.0.1:5500'
                     echo "Automated Test Passed: Application responded successfully."
                     
@@ -68,7 +67,7 @@ pipeline {
 
         stage('Remote Deployment (Ansible)') {
             steps {
-                // Injecting the partner server SSH private key securely into the environment
+                // Injecting Ria's SSH private key securely into the environment
                 withCredentials([sshUserPrivateKey(credentialsId: 'ria_key', keyFileVariable: 'RIA_KEY')]) {
                     dir('components') {
                         echo "Initiating Ansible Playbook for remote deployment..."
@@ -78,18 +77,6 @@ pipeline {
                             ansible-playbook -i inventory.ini deploy_app.yml
                         """
                     }
-                }
-            }
-        }
-
-        stage('Production Deployment (Swarm)') {
-            steps {
-                // This tells Tharun's Manager to pull the fresh image and update the cluster
-                withCredentials([sshUserPrivateKey(credentialsId: 'ria_key', keyFileVariable: 'SWARM_KEY')]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no -i ${SWARM_KEY} ubuntu@${THARUN_MANAGER_IP} \
-                        "docker service update --image ${DOCKER_USER}/${IMAGE_NAME}:latest my-note-stack_web"
-                    """
                 }
             }
         }
